@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🚀 AI Crypto Trading Bot - Bitcoin & USDT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/akinola566/Stylesmcbot/docs/style.css">
+  <style>
+    body { padding-bottom: 70px; background: #181c22; }
+    .main-container { margin-bottom: 48px; }
+    .spa-section { display:none; }
+    .spa-section.active { display:block; animation: fadeIn .6s cubic-bezier(.23,1.02,.36,1.03);}
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+    /* ... (all previous styles from your index, dashboard, trade, about, and copy pages) ... */
+    /* For brevity, use the same styles as in your previous files */
+    .chart-card { background: rgba(44, 62, 80, 0.86); border-radius: 20px; box-shadow: 0 4px 32px #0004; color: #fff; margin-bottom: 28px; padding: 18px 12px 14px 12px; text-align: center; animation: fadeInUp .7s cubic-bezier(.23,1.02,.36,1.03);}
+    @keyframes fadeInUp { from { transform: translateY(32px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .chart-title { color: #42a1fa; margin-bottom: 10px; font-weight: 700; letter-spacing: .03em;}
+    .chart-frame-wrap { width: 100%; min-height: 260px; border-radius: 14px; overflow: hidden; background: #23272f; border:1.5px solid #00ff88; box-shadow: 0 2px 12px #0006; transition: box-shadow .25s;}
+    .chart-frame-wrap:focus-within, .chart-frame-wrap:hover { box-shadow: 0 4px 24px #00ff8866; }
+    iframe.tradingview-iframe { width: 100%; height: 280px; border: 0; background: #23272f; transition: filter .3s;}
+    @media (max-width:600px) { .main-container { max-width:99vw; padding: 0 0.5em; } .trade-card, .chart-card { padding: 16px 4vw 12px 4vw; } .chart-frame-wrap { min-height: 200px; } iframe.tradingview-iframe { height: 200px;} }
+    /* ...add any other styles from your previous files here for each section... */
+    /* About & Copy styling for width, cards, etc */
+    .about-card, .copy-card { background: rgba(44,62,80,0.95); border-radius: 20px; box-shadow: 0 4px 32px #0004; padding: 32px 24px 30px 24px; color: #fff; margin: 44px auto 24px auto; max-width: 480px;}
+    .address-box { background: #23272f; font-size: 1.15em; border-radius: 12px; padding: 14px; word-break: break-all; margin: 16px 0; border: 1.5px solid #00ff88;}
+    .copy-btn { background: #00ff88; color: #23272f; border: none; border-radius: 8px; padding: 7px 18px; font-weight: 600; cursor:pointer; margin-left: 6px;}
+    .send-btn { background: #42a1fa; color:#fff; border: none; border-radius: 8px; padding: 9px 22px; font-weight: 600; cursor:pointer; font-size: 1.08em; }
+    .info { color: #ffa500; margin: 15px 0 8px 0;}
+    .success { color: #00ff88; margin: 12px 0;}
+    .error { color: #ff4757; }
+    /* ... */
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="crypto-loader">
+      <div class="bitcoin-icon">₿</div>
+      <div class="loading-text">Initializing AI Trading Bot...</div>
+    </div>
+  </div>
+  <div class="main-container">
+    <!-- SPA Sections Start -->
+    <!-- ==== HOME / DASHBOARD ==== -->
+    <section id="spa-home" class="spa-section active">
+      <header class="hero-header">
+        <div class="crypto-title">
+          <i class="fab fa-bitcoin crypto-icon"></i>
+          <h1 class="brand-name">AI CRYPTO BOT</h1>
+          <div class="subtitle">Bitcoin & USDT Smart Trading Assistant</div>
+        </div>
+        <div class="status-bar">
+          <div class="status-item">
+            <span class="status-label">Connection:</span>
+            <span id="connection-status" class="status-value connected">🟢 Connected</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Runtime:</span>
+            <span id="uptime" class="status-value">00:00:00</span>
+          </div>
+        </div>
+        <div class="control-buttons">
+          <button id="start-bot" class="neon-btn start-btn">
+            <i class="fas fa-rocket"></i>
+            <span>START TRADING</span>
+          </button>
+          <button id="stop-bot" class="neon-btn stop-btn" disabled>
+            <i class="fas fa-stop"></i>
+            <span>STOP BOT</span>
+          </button>
+        </div>
+      </header>
+      <!-- Home Dashboard grid (same as before) -->
+      <div class="dashboard-grid">
+        <div class="trading-panel">
+          <div class="panel-header">
+            <h2>🎯 SMART TRADING SIGNALS</h2>
+            <div class="signal-indicator" id="signalIndicator">
+              <div class="pulse-dot"></div>
+              <span>Analyzing Market...</span>
+            </div>
+          </div>
+          <div class="crypto-cards" id="cryptoCards">
+            <div class="crypto-card bitcoin-card">
+              <div class="crypto-header">
+                <div class="crypto-info">
+                  <i class="fab fa-bitcoin"></i>
+                  <span class="crypto-name">BITCOIN</span>
+                  <span class="crypto-symbol">BTC/USDT</span>
+                </div>
+                <div class="price-display" id="btc-price">$0.00</div>
+              </div>
+              <div class="signal-section">
+                <div class="risk-meter">
+                  <div class="risk-label">RISK LEVEL</div>
+                  <div class="risk-value" id="btc-risk">ANALYZING</div>
+                </div>
+                <div class="confidence-meter">
+                  <div class="confidence-label">AI CONFIDENCE</div>
+                  <div class="confidence-value" id="btc-confidence">---%</div>
+                  <div class="confidence-bar">
+                    <div class="confidence-fill" id="btc-confidence-bar"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="recommendation-box" id="btc-recommendation">
+                <div class="recommendation-text">Collecting market data...</div>
+                <div class="recommendation-action"></div>
+              </div>
+            </div>
+            <div class="crypto-card usdt-card">
+              <div class="crypto-header">
+                <div class="crypto-info">
+                  <i class="fas fa-coins"></i>
+                  <span class="crypto-name">ALTCOINS</span>
+                  <span class="crypto-symbol">Various/USDT</span>
+                </div>
+                <div class="price-display" id="alt-price">Multiple Pairs</div>
+              </div>
+              <div class="signal-section">
+                <div class="risk-meter">
+                  <div class="risk-label">RISK LEVEL</div>
+                  <div class="risk-value" id="alt-risk">ANALYZING</div>
+                </div>
+                <div class="confidence-meter">
+                  <div class="confidence-label">AI CONFIDENCE</div>
+                  <div class="confidence-value" id="alt-confidence">---%</div>
+                  <div class="confidence-bar">
+                    <div class="confidence-fill" id="alt-confidence-bar"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="recommendation-box" id="alt-recommendation">
+                <div class="recommendation-text">Scanning opportunities...</div>
+                <div class="recommendation-action"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="side-panel">
+          <div class="stats-box">
+            <h3>📊 QUICK STATS</h3>
+            <div class="stat-item">
+              <span class="stat-label">Market Status:</span>
+              <span class="stat-value" id="market-status">🟢 ACTIVE</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Signals Today:</span>
+              <span class="stat-value" id="signals-today">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Success Rate:</span>
+              <span class="stat-value" id="success-rate">---%</span>
+            </div>
+          </div>
+          <div class="activity-log">
+            <h3>📝 LIVE ACTIVITY</h3>
+            <div class="log-container" id="activity-log">
+              <div class="log-entry">Bot initialized - Ready to trade</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="trades-section" id="trades-section" style="display: none;">
+        <h2>💰 ACTIVE TRADES</h2>
+        <div class="trades-grid" id="trades-grid"></div>
+      </div>
+      <div class="guide-section">
+        <div class="guide-box">
+          <h3>🎓 HOW TO USE THIS BOT</h3>
+          <div class="guide-steps">
+            <div class="step"><div class="step-number">1</div><div class="step-text">Click "START TRADING" to begin market analysis</div></div>
+            <div class="step"><div class="step-number">2</div><div class="step-text">Watch the RISK LEVEL: GREEN = Safe, RED = Dangerous</div></div>
+            <div class="step"><div class="step-number">3</div><div class="step-text">AI CONFIDENCE shows how sure we are (higher = better)</div></div>
+            <div class="step"><div class="step-number">4</div><div class="step-text">Follow the recommendation: BUY, SELL, or WAIT</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center; margin: 32px 0;">
+        <button class="neon-btn start-btn" style="font-size:1.2em; padding: 16px 40px;" onclick="spa_nav('trade')">💸 Trade for Me</button>
+      </div>
+    </section>
+    <!-- ==== TRADE ==== -->
+    <section id="spa-trade" class="spa-section">
+      <div class="chart-card" id="chart-card">
+        <div class="chart-title" id="chart-title">Live Chart: BTCUSDT</div>
+        <div class="chart-frame-wrap">
+          <iframe id="chart-iframe"
+            class="tradingview-iframe"
+            src="https://www.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=60&hidesidetoolbar=1&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=[]&theme=dark&style=1&timezone=Etc/UTC&utm_source=blackonstar"
+            allowtransparency="true" scrolling="no"></iframe>
+        </div>
+      </div>
+      <div class="trade-card">
+        <h1 style="font-size:2em;">🤖 Trade For Me</h1>
+        <div id="trade-status"></div>
+        <div id="trade-control">
+          <label class="trade-label">Trade Amount ($):</label><br>
+          <input type="number" id="trade-amount" min="1" max="1000" value="100" class="trade-input"><br>
+          <label class="trade-label">Asset:</label><br>
+          <select id="trade-asset" class="trade-select">
+            <option value="BTC">BTC</option>
+            <option value="USDT">USDT</option>
+          </select><br>
+          <button id="start-trade-btn" class="neon-btn start-btn trade-action-btn">Start Trade</button>
+        </div>
+        <div id="live-trade" style="display:none;">
+          <div class="small-card" style="margin-bottom:18px;">
+            <div>Trading <b><span id="live-asset"></span></b> for <b><span id="live-amount"></span>$</b></div>
+            <div class="trade-timer" id="trade-timer"></div>
+          </div>
+          <div class="trade-progress-chart">
+            <div id="trade-progress" class="trade-progress-fill"></div>
+          </div>
+          <div id="live-profit" class="trade-profit">Profit: $0.00</div>
+          <div id="trade-status-msg" class="trade-status-msg"></div>
+          <button id="stop-trade-btn" class="neon-btn stop-btn trade-action-btn" style="margin-top:22px;">Stop Trade</button>
+        </div>
+      </div>
+      <div class="trade-card" style="padding:22px 16px 14px 16px;">
+        <h2 style="color:#42a1fa;">Trade History</h2>
+        <div id="trade-history"></div>
+      </div>
+    </section>
+    <!-- ==== DASHBOARD ==== -->
+    <section id="spa-dashboard" class="spa-section">
+      <div class="dashboard-card" id="profile-card">
+        <h2 style="margin-bottom:10px;">👤 User Profile</h2>
+        <img src="" id="profile-avatar" alt="Profile Picture" class="profile-avatar" />
+        <label for="profile-upload" class="profile-upload-label" id="profile-upload-label">Upload Photo</label>
+        <input type="file" id="profile-upload" accept="image/*" style="display:none;">
+        <div id="profile-name-section"></div>
+        <div id="profile-msg" style="margin-top:5px;color:#00ff88;min-height:18px;"></div>
+      </div>
+      <div class="dashboard-card">
+        <h2>📈 Trading Stats</h2>
+        <table class="stats-table">
+          <tr><th>Total Trades</th><td id="stat-total"></td></tr>
+          <tr><th>Total Profit</th><td id="stat-profit"></td></tr>
+          <tr><th>Biggest Win</th><td id="stat-win"></td></tr>
+          <tr><th>Biggest Loss</th><td id="stat-loss"></td></tr>
+        </table>
+      </div>
+      <div class="dashboard-card">
+        <h2>📝 Trade History</h2>
+        <div id="dashboard-history"></div>
+      </div>
+    </section>
+    <!-- ==== ABOUT ==== -->
+    <section id="spa-about" class="spa-section">
+      <div class="about-card">
+        <h1>📝 About OanderTradebot</h1>
+        <div class="section" style="margin:22px 0;">
+          <div class="section-title" style="color:#42a1fa; font-size:1.15em; font-weight:700;">What is OanderTradebot?</div>
+          <div>
+            OanderTradebot is a smart AI-powered crypto trading dashboard and tool. It gives you live trading signals, simulates profits, and includes a “Trade for Me” feature for hands-off demo trading.
+          </div>
+        </div>
+        <div class="section" style="margin:22px 0;">
+          <div class="section-title" style="color:#42a1fa; font-size:1.15em; font-weight:700;">How to Use</div>
+          <ul>
+            <li>Use the <b>Dashboard</b> to see signals, stats, and active trades.</li>
+            <li>Try <b>Trade For Me</b> for automatic simulated trading and see your profits grow.</li>
+            <li>Set up your <b>Profile</b> and upload a photo for a personal touch.</li>
+            <li>Go to <b>Copy Code</b> to get access to exclusive code (payment required).</li>
+          </ul>
+        </div>
+        <div class="section" style="margin:22px 0;">
+          <div class="section-title" style="color:#42a1fa; font-size:1.15em; font-weight:700;">Need Help?</div>
+          <div>
+            Contact support on WhatsApp: <a href="https://wa.me/2348100096815" style="color:#00ff88;text-decoration:underline;">+2348100096815</a>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- ==== COPY CODE ==== -->
+    <section id="spa-copy" class="spa-section">
+      <div class="copy-card">
+        <h1>📋 Copy Code</h1>
+        <div>To copy the code, you need to make a payment of <b>$100 USDT (BEP20)</b>.</div>
+        <div class="step" style="margin: 18px 0 6px 0;">1. Send payment to the wallet address below:</div>
+        <div class="address-box" id="usdt-address">
+          0x1234abcd5678efgh9012ijklmnopqrstuvwx3456
+          <button class="copy-btn" onclick="copyAddress()">Copy</button>
+        </div>
+        <div class="step" style="margin: 18px 0 6px 0;">2. After payment, click the button below:</div>
+        <button class="send-btn" onclick="showUpload()">I have transferred</button>
+        <div id="upload-section" style="display:none;">
+          <div class="info">Upload a screenshot of your payment as confirmation:</div>
+          <input type="file" id="screenshot" accept="image/*" class="file-upload"><br>
+          <button class="send-btn" style="margin-top:15px;" onclick="sendToWhatsapp()">Send Screenshot & Contact Support</button>
+          <div class="info" style="font-size:0.93em;">You will be redirected to WhatsApp for confirmation.</div>
+        </div>
+        <div id="copy-success" class="success"></div>
+      </div>
+    </section>
+    <!-- SPA Sections End -->
+  </div>
+  <!-- Bottom Navigation Bar -->
+  <nav id="bottom-nav" style="position:fixed;left:0;right:0;bottom:0;height:60px;background:rgba(30,34,40,0.98);box-shadow:0 -2px 16px #0003;display:flex;align-items:center;justify-content:space-evenly;z-index:2000;">
+    <button id="nav-home" title="Home" style="background:none;border:none;outline:none;font-size:2em;color:#00ff88;">🏠</button>
+    <button id="nav-trade" title="Trade For Me" style="background:none;border:none;outline:none;font-size:2em;color:#00ff88;">🤖</button>
+    <button id="nav-dashboard" title="Dashboard" style="background:none;border:none;outline:none;font-size:2em;color:#00ff88;">📊</button>
+    <button id="nav-menu" title="Menu" style="background:none;border:none;outline:none;font-size:2em;color:#fff;">&#9776;</button>
+  </nav>
+  <div id="nav-modal" style="display:none;position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:2100;
+    background:rgba(0,0,0,0.65);align-items:flex-end;justify-content:center;">
+    <div style="background:#23272f;color:#fff;width:100vw;max-width:350px;margin:auto;border-radius:18px 18px 0 0;padding:32px 0 24px 0;text-align:center;box-shadow:0 -2px 16px #0006;">
+      <h2 style="margin-bottom:18px;">Menu</h2>
+      <a href="#" onclick="spa_nav('home');return false;" style="display:block;padding:10px 0;color:#00ff88;">🏠 Home</a>
+      <a href="#" onclick="spa_nav('trade');return false;" style="display:block;padding:10px 0;color:#00ff88;">🤖 Trade For Me</a>
+      <a href="#" onclick="spa_nav('dashboard');return false;" style="display:block;padding:10px 0;color:#00ff88;">📊 Dashboard</a>
+      <a href="#" onclick="spa_nav('about');return false;" style="display:block;padding:10px 0;color:#00ff88;">📝 About</a>
+      <a href="#" onclick="spa_nav('copy');return false;" style="display:block;padding:10px 0;color:#00ff88;">📋 Copy Code</a>
+      <a href="#" id="nav-modal-close" style="display:block;padding:10px 0;margin-top:8px;color:#ff4757;">Close</a>
+    </div>
+  </div>
+  <script>
+    // SPA Navigation logic
+    function spa_nav(page) {
+      // Sections: home, trade, dashboard, about, copy
+      ["home","trade","dashboard","about","copy"].forEach(p => {
+        document.getElementById("spa-"+p).classList.remove("active");
+      });
+      document.getElementById("spa-"+page).classList.add("active");
+      document.getElementById('nav-modal').style.display = "none";
+      window.scrollTo(0,0);
+    }
+    document.getElementById('nav-home').onclick = ()=>spa_nav('home');
+    document.getElementById('nav-trade').onclick = ()=>spa_nav('trade');
+    document.getElementById('nav-dashboard').onclick = ()=>spa_nav('dashboard');
+    document.getElementById('nav-menu').onclick = ()=>document.getElementById('nav-modal').style.display = "flex";
+    document.getElementById('nav-modal-close').onclick = (e) => { e.preventDefault(); document.getElementById('nav-modal').style.display = "none"; };
+    document.getElementById('nav-modal').onclick = function(e) { if(e.target === this) this.style.display = "none"; };
+
+    // SPA links from inside cards/buttons
+    // e.g. the "Trade for Me" button in dashboard
+    window.spa_nav = spa_nav;
+
+    // Copy Code logic
+    function copyAddress() {
+      const addr = document.getElementById("usdt-address").innerText.trim();
+      navigator.clipboard.writeText(addr.replace(/Copy$/, "").trim());
+      document.getElementById("copy-success").innerText = "Address copied!";
+      setTimeout(function(){ document.getElementById("copy-success").innerText=""; }, 1600);
+    }
+    function showUpload() {
+      document.getElementById("upload-section").style.display = "block";
+    }
+    function sendToWhatsapp() {
+      var input = document.getElementById("screenshot");
+      var fileGiven = input.files && input.files.length>0 ? "Screenshot attached" : "No screenshot attached";
+      var msg = encodeURIComponent(
+        `Hello, I want to send a screenshot from OanderTradebot that I have made payment to copy code. ${fileGiven}\nMy details:\n[Your Name or Email here]\n\nPlease check and send me the code.`
+      );
+      window.open("https://wa.me/2348100096815?text="+msg, "_blank");
+    }
+
+    // TradingView Chart logic for SPA (trade section)
+    const chartIframe = document.getElementById("chart-iframe");
+    const chartTitle = document.getElementById("chart-title");
+    const assetSelect = document.getElementById("trade-asset");
+    function updateChart() {
+      let asset = assetSelect.value;
+      let symbol = (asset === "BTC") ? "BINANCE:BTCUSDT" : "BINANCE:USDTBUSD";
+      chartIframe.src = `https://www.tradingview.com/widgetembed/?symbol=${encodeURIComponent(symbol)}&interval=60&hidesidetoolbar=1&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=[]&theme=dark&style=1&timezone=Etc/UTC&utm_source=blackonstar`;
+      chartTitle.textContent = `Live Chart: ${symbol.replace("BINANCE:","")}`;
+    }
+    assetSelect.onchange = updateChart;
+
+    // Trade For Me logic (same as before, for trade section)
+    const TRADE_KEY = "active_advanced_trade";
+    const TRADE_HISTORY_KEY = "trade_history";
+    let tradeInterval = null, timerInterval = null, tradeState = null;
+    function saveTradeState(state) { localStorage.setItem(TRADE_KEY, JSON.stringify(state)); }
+    function getTradeState() { return JSON.parse(localStorage.getItem(TRADE_KEY)||"null"); }
+    function clearTradeState() { localStorage.removeItem(TRADE_KEY); }
+    function saveTradeHistory(trade) {
+      let history = JSON.parse(localStorage.getItem(TRADE_HISTORY_KEY)||"[]");
+      history.unshift(trade);
+      if(history.length > 50) history = history.slice(0,50);
+      localStorage.setItem(TRADE_HISTORY_KEY, JSON.stringify(history));
+    }
+    function getTradeHistory() {
+      return JSON.parse(localStorage.getItem(TRADE_HISTORY_KEY)||"[]");
+    }
+    function setStatus(msg) { document.getElementById("trade-status-msg").textContent = msg; }
+    function updateTradePanel() {
+      if(!tradeState) return;
+      document.getElementById('live-trade').style.display = "block";
+      document.getElementById('trade-control').style.display = "none";
+      document.getElementById('live-asset').textContent = tradeState.asset;
+      document.getElementById('live-amount').textContent = tradeState.amount;
+      document.getElementById('live-profit').textContent = "Profit: $" + tradeState.profit.toFixed(2);
+      document.getElementById('trade-progress').style.width = `${tradeState.progress}%`;
+      setStatus(tradeState.progress<100?`Trading in progress...`:"Trade finished!");
+    }
+    function startTradeTimer() {
+      const timerEl = document.getElementById("trade-timer");
+      timerInterval = setInterval(()=> {
+        if(tradeState && tradeState.running){
+          let elapsed = Date.now()-tradeState.started;
+          let left = Math.max(0, 24*60*60*1000 - elapsed);
+          let h = Math.floor(left/(1000*60*60)), m=Math.floor((left/(1000*60))%60), s=Math.floor((left/1000)%60);
+          timerEl.textContent = `Time left: ${h}h ${m}m ${s}s`;
+        }
+      },1000);
+    }
+    function stopTradeTimer() {clearInterval(timerInterval);}
+    function startTrade(amount, asset) {
+      stopTrade();
+      tradeState = {
+        started: Date.now(),
+        amount: amount,
+        asset: asset,
+        profit: 0,
+        progress: 0,
+        running: true
+      };
+      saveTradeState(tradeState);
+      updateTradePanel();
+      startTradeTimer();
+      tradeInterval = setInterval(() => {
+        if(!tradeState.running) return;
+        let elapsed = Date.now()-tradeState.started;
+        tradeState.progress = Math.min(100, (elapsed/(24*60*60*10)) );
+        if(tradeState.progress >= 100) tradeState.progress = 100;
+        let direction = Math.random() > 0.15 ? 1 : -1;
+        let tick = tradeState.amount * (Math.random()*0.002*direction);
+        tradeState.profit += tick;
+        if(tradeState.profit<0) tradeState.profit=0;
+        saveTradeState(tradeState);
+        updateTradePanel();
+        if(tradeState.progress>=100 || (Date.now()-tradeState.started) > 24*60*60*1000){
+          tradeState.running = false;
+          saveTradeState(tradeState);
+          setStatus("Trade finished! Press 'Stop Trade' to end.");
+          clearInterval(tradeInterval);
+          stopTradeTimer();
+        }
+      }, 1800);
+    }
+    function stopTrade() {
+      clearInterval(tradeInterval); clearInterval(timerInterval);
+      if(tradeState){
+        document.getElementById('live-trade').style.display = "none";
+        document.getElementById('trade-control').style.display = "block";
+        if(!tradeState.running || tradeState.progress>=100){
+          setStatus(`Trade completed! Final profit: $${tradeState.profit.toFixed(2)}`);
+          saveTradeHistory({...tradeState, ended: Date.now()});
+        }else{
+          setStatus(`Trade stopped. Profit: $${tradeState.profit.toFixed(2)}`);
+          saveTradeHistory({...tradeState, ended: Date.now()});
+        }
+        clearTradeState();
+        showHistory();
+      }
+    }
+    function showHistory(){
+      const history = getTradeHistory();
+      let html = "";
+      if(history.length === 0) html += "<div style='color:#888;'>No trades yet.</div>";
+      else html += "<table class='history-table'><tr><th>Asset</th><th>Amount($)</th><th>Profit($)</th><th>Ended</th></tr>"+
+      history.slice(0,10).map(t=>{
+        let d = new Date(t.ended||t.started);
+        return `<tr>
+          <td>${t.asset}</td>
+          <td>${t.amount}</td>
+          <td style="color:${t.profit>=0?'#00ff88':'#ff4757'}">${t.profit.toFixed(2)}</td>
+          <td style="color:#aaa">${d.toLocaleString()}</td>
+        </tr>`;
+      }).join("")+"</table>";
+      document.getElementById("trade-history").innerHTML = html;
+      // Also update dashboard history if present
+      if(document.getElementById("dashboard-history"))
+        document.getElementById("dashboard-history").innerHTML = html;
+    }
+    document.getElementById("start-trade-btn").onclick = function(){
+      let amt = parseFloat(document.getElementById("trade-amount").value);
+      let asset = document.getElementById("trade-asset").value;
+      if(isNaN(amt) || amt<1 || amt>1000){
+        alert("Amount must be between $1 and $1000."); return;
+      }
+      startTrade(amt, asset);
+    };
+    document.getElementById("stop-trade-btn").onclick = function(){ stopTrade(); };
+    // Restore on load
+    window.addEventListener("DOMContentLoaded", ()=>{
+      // Hide loading
+      setTimeout(() => { document.getElementById('loadingOverlay').style.display = 'none'; }, 2000);
+      // Show chart for initial asset
+      updateChart();
+      tradeState = getTradeState();
+      if(tradeState && tradeState.running){
+        updateTradePanel(); startTradeTimer();
+        tradeInterval = setInterval(() => {
+          if(!tradeState.running) return;
+          let elapsed = Date.now()-tradeState.started;
+          tradeState.progress = Math.min(100, (elapsed/(24*60*60*10)) );
+          if(tradeState.progress >= 100) tradeState.progress = 100;
+          let direction = Math.random() > 0.15 ? 1 : -1;
+          let tick = tradeState.amount * (Math.random()*0.002*direction);
+          tradeState.profit += tick; if(tradeState.profit<0) tradeState.profit=0;
+          saveTradeState(tradeState); updateTradePanel();
+          if(tradeState.progress>=100 || (Date.now()-tradeState.started) > 24*60*60*1000){
+            tradeState.running = false; saveTradeState(tradeState);
+            setStatus("Trade finished! Press 'Stop Trade' to end.");
+            clearInterval(tradeInterval); stopTradeTimer();
+          }
+        }, 1800);
+      } else {
+        document.getElementById('live-trade').style.display = "none";
+        document.getElementById('trade-control').style.display = "block";
+      }
+      showHistory();
+      updateStats();
+      renderAvatar();
+      renderProfileName();
+    });
+
+    // Dashboard Profile logic
+    const PROFILE_KEY = "profile_name";
+    const AVATAR_KEY = "profile_avatar";
+    function saveProfile(name){
+      localStorage.setItem(PROFILE_KEY, name);
+      renderProfileName();
+      showProfileMsg("Profile saved!");
+    }
+    function getProfile(){
+      return localStorage.getItem(PROFILE_KEY)||"";
+    }
+    function showProfileMsg(msg) {
+      document.getElementById("profile-msg").textContent = msg;
+      setTimeout(() => { document.getElementById("profile-msg").textContent = ""; }, 1800);
+    }
+    function renderProfileName(editing=false){
+      const sec = document.getElementById("profile-name-section");
+      sec.innerHTML = "";
+      if(!editing){
+        let name = getProfile();
+        if(name){
+          sec.innerHTML = `<div class="profile-name-row">
+            <span class="profile-name-display">${name}</span>
+            <button class="profile-edit-btn" id="edit-name-btn">Change Name</button>
+          </div>`;
+          document.getElementById("edit-name-btn").onclick = ()=>renderProfileName(true);
+        } else {
+          renderProfileName(true);
+        }
+      } else {
+        let curr = getProfile();
+        sec.innerHTML = `<div class="profile-input-row">
+          <input type="text" id="profile-name-input" class="profile-input" placeholder="Enter your name" value="${curr||""}">
+          <button class="neon-btn start-btn" id="save-profile-btn">Save</button>
+        </div>`;
+        document.getElementById("save-profile-btn").onclick = ()=>{
+          let v = document.getElementById("profile-name-input").value.trim();
+          if(v) saveProfile(v);
+        };
+      }
+    }
+    function renderAvatar(){
+      let url = localStorage.getItem(AVATAR_KEY);
+      const img = document.getElementById("profile-avatar");
+      img.src = url ? url : "https://ui-avatars.com/api/?name=User&background=23272f&color=00ff88&size=128&rounded=true";
+    }
+    document.getElementById("profile-upload").onchange = function(e){
+      const file = e.target.files[0];
+      if(file && file.type.startsWith("image/")){
+        const reader = new FileReader();
+        reader.onload = function(evt){
+          localStorage.setItem(AVATAR_KEY, evt.target.result);
+          renderAvatar();
+          showProfileMsg("Photo updated!");
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    document.getElementById("profile-upload-label").onclick = function(){
+      document.getElementById("profile-upload").click();
+    };
+
+    // Dashboard Stats
+    function updateStats(){
+      const trades = getTradeHistory();
+      let total = trades.length;
+      let profit = trades.reduce((s,t)=>s+(t.profit||0),0);
+      let win = trades.length ? Math.max(...trades.map(t=>t.profit)) : 0;
+      let loss = trades.length ? Math.min(...trades.map(t=>t.profit)) : 0;
+      document.getElementById("stat-total").textContent = total;
+      document.getElementById("stat-profit").textContent = "$"+profit.toFixed(2);
+      document.getElementById("stat-win").textContent = "$"+win.toFixed(2);
+      document.getElementById("stat-loss").textContent = "$"+loss.toFixed(2);
+    }
+
+    // Home Dashboard Bot Logic (optional, just like before)
+    window.addEventListener('load', function () {
+      setTimeout(() => {
+        document.getElementById('loadingOverlay').style.display = 'none';
+      }, 2000);
+    });
+
+    class CryptoTradingBot {
+      constructor() {
+        this.botRunning = false;
+        this.instruments = {};
+        this.signalsToday = 0;
+        this.successRate = 0;
+        this.startTime = null;
+
+        this.initializeEventListeners();
+        this.startUptimeCounter();
+        this.fakeStatusUpdater();
+      }
+
+      initializeEventListeners() {
+        const startBtn = document.getElementById('start-bot');
+        const stopBtn = document.getElementById('stop-bot');
+        if (startBtn) startBtn.addEventListener('click', () => this.startBot());
+        if (stopBtn) stopBtn.addEventListener('click', () => this.stopBot());
+      }
+
+      startBot() {
+        this.botRunning = true;
+        this.startTime = Date.now();
+        this.updateBotControls();
+        this.updateSignalIndicator('🚀 Bot Active - Scanning Markets...', 'active');
+        this.addLogEntry('🚀 Trading bot started - Simulating crypto markets');
+      }
+
+      stopBot() {
+        this.botRunning = false;
+        this.startTime = null;
+        this.updateBotControls();
+        this.updateSignalIndicator('⏸️ Bot Stopped', 'stopped');
+        this.addLogEntry('⏸️ Trading bot stopped');
+      }
+
+      updateBotControls() {
+        const startBtn = document.getElementById('start-bot');
+        const stopBtn = document.getElementById('stop-bot');
+        if (startBtn && stopBtn) {
+          startBtn.disabled = this.botRunning;
+          stopBtn.disabled = !this.botRunning;
+          startBtn.style.opacity = this.botRunning ? '0.5' : '1';
+          stopBtn.style.opacity = this.botRunning ? '1' : '0.5';
+        }
+      }
+
+      updateSignalIndicator(text, status = 'analyzing') {
+        const indicator = document.getElementById('signalIndicator');
+        if (indicator) {
+          const span = indicator.querySelector('span');
+          if (span) span.textContent = text;
+          const pulseDot = indicator.querySelector('.pulse-dot');
+          if (pulseDot) pulseDot.style.background = this.getStatusColor(status);
+        }
+      }
+
+      getStatusColor(status) {
+        switch(status) {
+          case 'active': return '#00ff88';
+          case 'stopped': return '#ff4757';
+          case 'analyzing': return '#ffa500';
+          default: return '#42f5d7';
+        }
+      }
+
+      fakeStatusUpdater() {
+        setInterval(() => {
+          if (this.botRunning) {
+            this.signalsToday++;
+            // BTC data
+            const fakePrice = (50000 + Math.random() * 2000).toFixed(0);
+            const fakeConfidence = Math.floor(Math.random() * 100);
+            const fakeRisk = ['LOW', 'MEDIUM', 'HIGH', 'VERY HIGH'][Math.floor(Math.random() * 4)];
+            const fakeRecommendation = ['STRONG BUY', 'STRONG SELL', 'DO NOT TRADE', ''][Math.floor(Math.random() * 4)];
+            // Altcoins data
+            const fakeAltPrice = (1 + Math.random() * 0.1).toFixed(4);
+            const fakeAltConfidence = Math.floor(Math.random() * 100);
+            const fakeAltRisk = ['LOW', 'MEDIUM', 'HIGH', 'VERY HIGH'][Math.floor(Math.random() * 4)];
+            const fakeAltRecommendation = ['STRONG BUY', 'STRONG SELL', 'DO NOT TRADE', ''][Math.floor(Math.random() * 4)];
+
+            const fakeData = {
+              instruments: {
+                'FAKE_BTC': {
+                  price: fakePrice,
+                  active_trade: {
+                    confidence: `${fakeConfidence}%`,
+                    risk_level: fakeRisk,
+                    recommendation: fakeRecommendation
+                  }
+                },
+                'FAKE_ALT': {
+                  price: fakeAltPrice,
+                  active_trade: {
+                    confidence: `${fakeAltConfidence}%`,
+                    risk_level: fakeAltRisk,
+                    recommendation: fakeAltRecommendation
+                  }
+                }
+              }
+            };
+            this.updateDashboard(fakeData);
+            this.addLogEntry(`📊 New Signal - ${fakeRecommendation} / ${fakeAltRecommendation}`);
+          }
+        }, 3000);
+      }
+
+      updateDashboard(data) {
+        if (data.instruments) {
+          this.instruments = data.instruments;
+          // BTC card
+          this.updateCryptoCard('btc', {
+            price: data.instruments['FAKE_BTC'].price,
+            risk: this.mapRiskLevel(data.instruments['FAKE_BTC'].active_trade.risk_level),
+            confidence: data.instruments['FAKE_BTC'].active_trade.confidence,
+            recommendation: this.mapRecommendation(data.instruments['FAKE_BTC'].active_trade.recommendation)
+          });
+          // Altcoins card
+          this.updateCryptoCard('alt', {
+            price: data.instruments['FAKE_ALT'].price,
+            risk: this.mapRiskLevel(data.instruments['FAKE_ALT'].active_trade.risk_level),
+            confidence: data.instruments['FAKE_ALT'].active_trade.confidence,
+            recommendation: this.mapRecommendation(data.instruments['FAKE_ALT'].active_trade.recommendation)
+          });
+
+          // Stats
+          const signalsElement = document.getElementById('signals-today');
+          if (signalsElement) signalsElement.textContent = this.signalsToday;
+          const successElement = document.getElementById('success-rate');
+          if (successElement) {
+            const rate = Math.min(95, 75 + (this.signalsToday % 5) * 5);
+            successElement.textContent = `${rate}%`;
+          }
+        }
+      }
+
+      updateCryptoCard(prefix, data) {
+        const priceElement = document.getElementById(`${prefix}-price`);
+        if (priceElement) priceElement.textContent = `$${data.price}`;
+        const riskElement = document.getElementById(`${prefix}-risk`);
+        if (riskElement) {
+          riskElement.textContent = data.risk.text;
+          riskElement.className = `risk-value ${data.risk.class}`;
+        }
+        const confidenceElement = document.getElementById(`${prefix}-confidence`);
+        const confidenceBar = document.getElementById(`${prefix}-confidence-bar`);
+        if (confidenceElement) confidenceElement.textContent = data.confidence;
+        if (confidenceBar) confidenceBar.style.width = data.confidence;
+        const recommendationElement = document.getElementById(`${prefix}-recommendation`);
+        if (recommendationElement) {
+          const textElement = recommendationElement.querySelector('.recommendation-text');
+          const actionElement = recommendationElement.querySelector('.recommendation-action');
+          if (textElement) textElement.textContent = data.recommendation.text;
+          if (actionElement) {
+            actionElement.textContent = data.recommendation.action;
+            actionElement.className = `recommendation-action ${data.recommendation.class}`;
+          }
+        }
+      }
+
+      mapRiskLevel(riskLevel) {
+        switch(riskLevel) {
+          case 'LOW': return { text: 'LOW RISK', class: 'low' };
+          case 'MEDIUM': return { text: 'MEDIUM RISK', class: 'medium' };
+          case 'HIGH': return { text: 'HIGH RISK', class: 'high' };
+          case 'VERY HIGH': return { text: 'VERY HIGH RISK', class: 'very-high' };
+          default: return { text: 'ANALYZING', class: '' };
+        }
+      }
+
+      mapRecommendation(recommendation) {
+        switch(recommendation) {
+          case 'STRONG BUY':
+            return { text: 'AI recommends:', action: 'STRONG BUY 🚀', class: 'buy' };
+          case 'STRONG SELL':
+            return { text: 'AI recommends:', action: 'STRONG SELL 📉', class: 'sell' };
+          case 'DO NOT TRADE':
+            return { text: 'AI recommends:', action: 'DO NOT TRADE ⚠️', class: 'wait' };
+          default:
+            return { text: 'AI is analyzing...', action: 'WAIT FOR SIGNAL', class: 'wait' };
+        }
+      }
+
+      addLogEntry(message) {
+        const logContainer = document.getElementById('activity-log');
+        if (logContainer) {
+          const timestamp = new Date().toLocaleTimeString();
+          const entry = document.createElement('div');
+          entry.className = 'log-entry';
+          entry.textContent = `${timestamp} - ${message}`;
+          logContainer.insertBefore(entry, logContainer.firstChild);
+          while (logContainer.children.length > 20) {
+            logContainer.removeChild(logContainer.lastChild);
+          }
+        }
+      }
+
+      startUptimeCounter() {
+        setInterval(() => {
+          if (this.startTime) {
+            const uptime = Date.now() - this.startTime;
+            const hours = Math.floor(uptime / (1000 * 60 * 60));
+            const minutes = Math.floor((uptime / (1000 * 60)) % 60);
+            const seconds = Math.floor((uptime / 1000) % 60);
+            const uptimeDisplay = document.getElementById('uptime');
+            if (uptimeDisplay) uptimeDisplay.textContent = `${hours}h ${minutes}m ${seconds}s`;
+          }
+        }, 1000);
+      }
+    }
+    window.onload = () => new CryptoTradingBot();
+  </script>
+</body>
+</html>
